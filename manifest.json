@@ -1,0 +1,15 @@
+{
+  "name": "TBS SIGNAL",
+  "short_name": "TBS SIGNAL",
+  "start_url": ".",
+  "display": "standalone",
+  "background_color": "#06090f",
+  "theme_color": "#00e676",
+  "icons": [
+    {
+      "src": "https://cdn-icons-png.flaticon.com/512/561/561127.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
