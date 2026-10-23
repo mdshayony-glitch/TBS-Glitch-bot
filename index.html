@@ -6,7 +6,6 @@
 <title>TBS SIGNAL</title>
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#06090f">
-<!-- TradingView Chart Script -->
 <script type="text/javascript" src="https://s3.tradingview.com/tv.js"></script>
 <style>
   *{margin:0; padding:0; box-sizing:border-box;}
@@ -18,15 +17,9 @@
   .online{color:#00e676; display:flex; align-items:center; gap:5px; font-size:12px;}
   .dot{width:8px; height:8px; background:#00e676; border-radius:50%; animation:pulse 1.5s infinite;}
   @keyframes pulse{0%{box-shadow:0 0 0 0 rgba(0,230,118,0.7)} 100%{box-shadow:0 0 0 10px rgba(0,230,118,0)}}
-  .btn-group{display:flex; gap:8px; flex-wrap:wrap; margin-top:10px;}
-  .btn{background:#1e293b; color:#cbd5e1; border:none; padding:8px 14px; border-radius:10px; cursor:pointer; font-size:13px;}
-  .btn.active{background:linear-gradient(90deg,#00e676,#00b0ff); color:#000; font-weight:bold;}
-  select{width:100%; background:#1e293b; color:#fff; border:1px solid #334155; padding:10px; border-radius:10px; margin-top:10px; outline:none;}
-  #tradingview_chart{height:230px; border-radius:12px; margin-top:10px; overflow:hidden;}
-  .scan-btn{width:100%; background:linear-gradient(90deg,#00e676,#00a3ff); border:none; color:#000; padding:14px; font-weight:bold; font-size:15px; border-radius:12px; margin-top:15px; cursor:pointer;}
-  .signal-box{text-align:center; padding:12px; margin-top:10px; border-radius:10px; display:none; font-weight:bold; font-size:18px;}
-  .call{background:#00e676; color:#000;}
-  .put{background:#ff5252; color:#fff;}
+  select{width:100%; background:#1e293b; color:#fff; border:1px solid #334155; padding:12px; border-radius:10px; margin-top:10px; outline:none; font-size:14px;}
+  #tradingview_chart{height:420px; border-radius:12px; margin-top:10px; overflow:hidden;} /* Chart বড় করে দিলাম */
+  .info{font-size:11px; color:#64748b; text-align:center; margin-top:10px;}
 </style>
 </head>
 <body>
@@ -35,34 +28,29 @@
   <div class="header">
     <div style="display:flex; align-items:center; gap:10px;">
       <div class="logo-icon">🛡️</div>
-      <div><div style="font-weight:bold; font-size:16px;">TBS SIGNAL <span class="badge">PRO</span></div><div style="font-size:11px; color:#94a3b8;">Encrypted Terminal</div></div>
+      <div><div style="font-weight:bold; font-size:16px;">TBS SIGNAL <span class="badge">PRO</span></div><div style="font-size:11px; color:#94a3b8;">100+ Markets Live Terminal</div></div>
     </div>
-    <div class="online"><div class="dot"></div> ONLINE</div>
+    <div class="online"><div class="dot"></div> LIVE</div>
   </div>
 </div>
 
 <div class="card">
-  <div style="font-size:12px; color:#94a3b8;">🎯 TARGET BROKER NODE</div>
-  <div class="btn-group">
-    <button class="btn active">Quotex</button><button class="btn">Pocket</button><button class="btn">Binomo</button><button class="btn">Olymp</button>
-  </div>
-</div>
-
-<div class="card">
-  <div style="font-size:12px; color:#94a3b8;">🔍 ASSET & PAIR</div>
+  <div style="font-size:12px; color:#94a3b8;">🔍 SELECT MARKET - 100+ PAIRS</div>
   <select id="pairSelect" onchange="changePair()">
-    <option value="OANDA:EURUSD">EUR/USD</option>
-    <option value="OANDA:GBPUSD">GBP/USD</option>
-    <option value="BINANCE:BTCUSDT">BTC/USD</option>
-    <option value="OANDA:USDJPY">USD/JPY</option>
+    <!-- FOREX -->
+    <option value="OANDA:EURUSD">EUR/USD</option><option value="OANDA:GBPUSD">GBP/USD</option><option value="OANDA:USDJPY">USD/JPY</option><option value="OANDA:AUDUSD">AUD/USD</option>
+    <option value="OANDA:USDCAD">USD/CAD</option><option value="OANDA:USDCHF">USD/CHF</option><option value="OANDA:NZDUSD">NZD/USD</option><option value="OANDA:EURGBP">EUR/GBP</option>
+    <option value="OANDA:EURJPY">EUR/JPY</option><option value="OANDA:GBPJPY">GBP/JPY</option>
+    <!-- CRYPTO -->
+    <option value="BINANCE:BTCUSDT">BTC/USD</option><option value="BINANCE:ETHUSDT">ETH/USD</option><option value="BINANCE:BNBUSDT">BNB/USD</option><option value="BINANCE:SOLUSDT">SOL/USD</option>
+    <option value="BINANCE:XRPUSDT">XRP/USD</option><option value="BINANCE:DOGEUSDT">DOGE/USD</option><option value="BINANCE:ADAUSDT">ADA/USD</option><option value="BINANCE:TRXUSDT">TRX/USD</option>
+    <option value="BINANCE:MATICUSDT">MATIC/USD</option><option value="BINANCE:LTCUSDT">LTC/USD</option>
+    <!-- STOCKS -->
+    <option value="NASDAQ:AAPL">APPLE</option><option value="NASDAQ:TSLA">TESLA</option><option value="NASDAQ:NVDA">NVIDIA</option><option value="NASDAQ:MSFT">MICROSOFT</option>
+    <option value="NYSE:GOOGL">GOOGLE</option><option value="NYSE:AMZN">AMAZON</option><option value="NYSE:META">META</option>
+    <!-- INDICES & COMMODITIES -->
+    <option value="OANDA:SPX500USD">S&P 500</option><option value="OANDA:NAS100USD">NASDAQ</option><option value="OANDA:XAUUSD">GOLD</option><option value="OANDA:XAGUSD">SILVER</option>
   </select>
-</div>
-
-<div class="card">
-  <div style="font-size:12px; color:#94a3b8;">⏰ TIMEFRAME</div>
-  <div class="btn-group">
-    <button class="btn">5s</button><button class="btn">15s</button><button class="btn">30s</button><button class="btn active">1m</button><button class="btn">5m</button>
-  </div>
 </div>
 
 <div class="card">
@@ -70,50 +58,34 @@
   <div id="tradingview_chart"></div>
 </div>
 
-<div id="signalBox" class="signal-box">SIGNAL: <span id="signalText">CALL</span></div>
-<button class="scan-btn" onclick="runScan()">⚡ EXECUTE AI SIGNAL SCAN</button>
+<div class="info">⚠️ This is a Market Analysis Terminal. No signals provided. Trade at your own risk.</div>
 
 <script>
-// 1. TradingView Chart Load
-let tvWidget;
+// TradingView Chart Load
 function loadChart(symbol){
   document.getElementById('tradingview_chart').innerHTML = "";
-  tvWidget = new TradingView.widget({
-    "autosize": true,
-    "height": 230,
-    "symbol": symbol,
-    "interval": "1",
-    "timezone": "Asia/Dhaka",
-    "theme": "dark",
-    "style": "1",
-    "locale": "en",
-    "toolbar_bg": "#0f172a",
-    "enable_publishing": false,
-    "allow_symbol_change": false,
-    "container_id": "tradingview_chart"
+  new TradingView.widget({
+    "autosize": true, 
+    "height": 420, 
+    "symbol": symbol, 
+    "interval": "1", // 1 Minute
+    "timezone": "Asia/Dhaka", 
+    "theme": "dark", 
+    "style": "1", // Candlestick
+    "hide_side_toolbar": false,
+    "withdateranges": true,
+    "container_id": "tradingview_chart", 
+    "allow_symbol_change": true,
+    "studies": ["RSI@tv-basicstudies", "MASimple@tv-basicstudies"] // RSI + Moving Average Add করা আছে
   });
 }
-loadChart("OANDA:EURUSD"); // Default Chart
+loadChart("OANDA:EURUSD");
 
-// 2. Pair Change Function
+// Pair Change
 function changePair(){
   let pair = document.getElementById('pairSelect').value;
   loadChart(pair);
 }
-
-// 3. Signal Scan Button
-function runScan(){
-  document.querySelector('.scan-btn').innerText = "SCANNING...";
-  setTimeout(()=>{
-    let signal = Math.random() > 0.5 ? "CALL" : "PUT";
-    let box = document.getElementById('signalBox');
-    document.getElementById('signalText').innerText = signal;
-    box.className = "signal-box " + (signal=="CALL"?"call":"put");
-    box.style.display = "block";
-    document.querySelector('.scan-btn').innerText = "⚡ EXECUTE AI SIGNAL SCAN";
-    alert("Demo Signal: " + signal + "\n\nএটা শুধু Practice এর জন্য। Real Trade এ রিস্ক নিয়ে ইউজ করো না");
-  },2000)
-}
 </script>
 </body>
-  </html>
+</html>
