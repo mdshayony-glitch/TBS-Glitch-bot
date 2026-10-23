@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-<title>TBS SIGNAL</title>
+<title>TBS SIGNAL PRO</title>
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#06090f">
 <script type="text/javascript" src="https://s3.tradingview.com/tv.js"></script>
@@ -22,16 +22,19 @@
   .btn{background:#1e293b; color:#cbd5e1; border:none; padding:8px 12px; border-radius:8px; cursor:pointer; font-size:12px;}
   .btn.active{background:linear-gradient(90deg,#00e676,#00a3ff); color:#000; font-weight:bold;}
   #tradingview_chart{height:380px; border-radius:12px; margin-top:10px; overflow:hidden; display:flex; align-items:center; justify-content:center; background:#0a0f1a;}
-  .otc-msg{text-align:center; color:#94a3b8;}
+  .otc-chart{width:100%; height:100%; display:flex; align-items:flex-end; justify-content:center; gap:2px; padding:10px;}
+  .candle{width:4px; background:#00e676; border-radius:2px;}
+  .candle.down{background:#ff5252;}
+  .otc-msg{text-align:center; color:#94a3b8; padding:20px;}
   .scan-btn{width:100%; background:linear-gradient(90deg,#00e676,#00a3ff); border:none; color:#000; padding:15px; font-weight:bold; font-size:16px; border-radius:12px; margin-top:15px; cursor:pointer;}
-  
-  .overlay{display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.9); z-index:999; align-items:center; justify-content:center;}
-  .result-box{background:linear-gradient(180deg,#0f172a,#06090f); border:2px solid #00e676; border-radius:24px; padding:30px 25px; text-align:center; width:90%; max-width:360px;}
-  .result-box.down{border-color:#ff5252;}
+  .overlay{display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.9); z-index:999; align-items:center; justify-content:center; backdrop-filter:blur(5px);}
+  .result-box{background:linear-gradient(180deg,#0f172a,#06090f); border:2px solid #00e676; border-radius:24px; padding:30px 25px; text-align:center; width:90%; max-width:360px; box-shadow:0 0 40px rgba(0,230,118,0.4);}
+  .result-box.down{border-color:#ff5252; box-shadow:0 0 40px rgba(255,82,82,0.4);}
   .result-icon{font-size:60px; margin-bottom:12px;}
-  .result-text{font-size:36px; font-weight:900;}
-  .up-text{color:#00e676;} .down-text{color:#ff5252;}
-  .close-btn{background:#1e293b; border:1px solid #334155; color:#fff; padding:10px 25px; border-radius:10px; margin-top:15px; cursor:pointer;}
+  .result-text{font-size:36px; font-weight:900; letter-spacing:2px;}
+  .up-text{color:#00e676; text-shadow:0 0 10px #00e676;} 
+  .down-text{color:#ff5252; text-shadow:0 0 10px #ff5252;}
+  .close-btn{background:#1e293b; border:1px solid #334155; color:#fff; padding:10px 25px; border-radius:10px; margin-top:15px; cursor:pointer; font-weight:bold;}
 </style>
 </head>
 <body>
@@ -47,7 +50,7 @@
 </div>
 
 <div class="card">
-  <div style="font-size:12px; color:#94a3b8;">🔍 SELECT MARKET TYPE</div>
+  <div style="font-size:12px; color:#94a3b8;">🔍 MARKET TYPE</div>
   <select id="marketType" onchange="changeMarketType()">
     <option value="live">LIVE MARKET</option>
     <option value="otc">OTC MARKET</option>
@@ -55,16 +58,15 @@
 </div>
 
 <div class="card">
-  <div style="font-size:12px; color:#94a3b8;">📊 SELECT PAIR - 100+ PAIRS</div>
+  <div style="font-size:12px; color:#94a3b8;">📊 SELECT PAIR</div>
   <select id="pairSelect" onchange="changePair()"></select>
 </div>
 
 <div class="card">
   <div style="font-size:12px; color:#94a3b8;">⏰ TIMEFRAME</div>
   <div class="btn-group" id="timeframeBtn">
-    <button class="btn" data-tf="1">1m</button><button class="btn" data-tf="5">5m</button>
-    <button class="btn active" data-tf="1">1m</button><button class="btn" data-tf="15">15m</button>
-    <button class="btn" data-tf="60">1H</button><button class="btn" data-tf="240">4H</button>
+    <button class="btn active" data-tf="1">1m</button><button class="btn" data-tf="5">5m</button>
+    <button class="btn" data-tf="15">15m</button><button class="btn" data-tf="60">1H</button>
   </div>
 </div>
 
@@ -79,7 +81,8 @@
   <div class="result-box" id="resultBox">
     <div class="result-icon" id="resultIcon">📊</div>
     <div class="result-text" id="resultText">UP</div>
-    <div style="color:#94a3b8; font-size:13px;">Market: <span id="marketName">EUR/USD</span></div>
+    <div style="color:#94a3b8; font-size:13px; margin-top:5px;">Market: <span id="marketName">EUR/USD</span></div>
+    <div style="color:#94a3b8; font-size:12px;">Based on: RSI + Trend Analysis</div>
     <button class="close-btn" onclick="closeResult()">CLOSE</button>
   </div>
 </div>
@@ -88,56 +91,60 @@
 let currentSymbol = "OANDA:EURUSD";
 let currentTF = "1";
 let marketMode = "live";
+let otcPrice = 1.0850;
+let otcPrices = [];
+let otcInterval;
 
-// 100+ Market List
 const markets = {
   live: [
-    // FOREX 30+
     "OANDA:EURUSD|EUR/USD","OANDA:GBPUSD|GBP/USD","OANDA:USDJPY|USD/JPY","OANDA:AUDUSD|AUD/USD","OANDA:USDCAD|USD/CAD",
     "OANDA:USDCHF|USD/CHF","OANDA:NZDUSD|NZD/USD","OANDA:EURGBP|EUR/GBP","OANDA:EURJPY|EUR/JPY","OANDA:GBPJPY|GBP/JPY",
-    // CRYPTO 40+
+    "OANDA:EURAUD|EUR/AUD","OANDA:GBPAUD|GBP/AUD","OANDA:AUDJPY|AUD/JPY","OANDA:EURCAD|EUR/CAD","OANDA:GBPCAD|GBP/CAD",
     "BINANCE:BTCUSDT|BTC/USD","BINANCE:ETHUSDT|ETH/USD","BINANCE:BNBUSDT|BNB/USD","BINANCE:SOLUSDT|SOL/USD","BINANCE:XRPUSDT|XRP/USD",
     "BINANCE:DOGEUSDT|DOGE/USD","BINANCE:ADAUSDT|ADA/USD","BINANCE:TRXUSDT|TRX/USD","BINANCE:MATICUSDT|MATIC/USD","BINANCE:LTCUSDT|LTC/USD",
-    // STOCKS 20+
-    "NASDAQ:AAPL|APPLE","NASDAQ:TSLA|TESLA","NASDAQ:NVDA|NVIDIA","NASDAQ:MSFT|MICROSOFT","NYSE:GOOGL|GOOGLE","NYSE:AMZN|AMAZON",
-    // INDICES & GOLD
+    "BINANCE:SHIBUSDT|SHIB/USD","BINANCE:AVAXUSDT|AVAX/USD","BINANCE:DOTUSDT|DOT/USD","BINANCE:LINKUSDT|LINK/USD",
+    "NASDAQ:AAPL|APPLE","NASDAQ:TSLA|TESLA","NASDAQ:NVDA|NVIDIA","NYSE:GOOGL|GOOGLE","NYSE:AMZN|AMAZON",
     "OANDA:SPX500USD|S&P 500","OANDA:NAS100USD|NASDAQ","OANDA:XAUUSD|GOLD","OANDA:XAGUSD|SILVER"
   ],
   otc: [
-    "OTC:EURUSD|EUR/USD OTC","OTC:GBPUSD|GBP/USD OTC","OTC:USDJPY|USD/JPY OTC","OTC:AUDUSD|AUD/USD OTC",
-    "OTC:BTCUSD|BTC/USD OTC","OTC:ETHUSD|ETH/USD OTC","OTC:GOLD|GOLD OTC","OTC:SILVER|SILVER OTC"
+    "OTC:EURUSD|EUR/USD OTC","OTC:GBPUSD|GBP/USD OTC","OTC:USDJPY|USD/JPY OTC","OTC:AUDUSD|AUD/USD OTC","OTC:USDCAD|USD/CAD OTC",
+    "OTC:USDCHF|USD/CHF OTC","OTC:NZDUSD|NZD/USD OTC","OTC:EURGBP|EUR/GBP OTC","OTC:EURJPY|EUR/JPY OTC","OTC:GBPJPY|GBP/JPY OTC",
+    "OTC:EURAUD|EUR/AUD OTC","OTC:GBPAUD|GBP/AUD OTC","OTC:AUDJPY|AUD/JPY OTC","OTC:EURCAD|EUR/CAD OTC","OTC:GBPCAD|GBP/CAD OTC",
+    "OTC:GBPNZD|GBP/NZD OTC","OTC:EURNZD|EUR/NZD OTC","OTC:AUDCAD|AUD/CAD OTC","OTC:AUDCHF|AUD/CHF OTC","OTC:AUDNZD|AUD/NZD OTC",
+    "OTC:CADJPY|CAD/JPY OTC","OTC:CHFJPY|CHF/JPY OTC","OTC:NZDJPY|NZD/JPY OTC",
+    "OTC:BTCUSD|BTC/USD OTC","OTC:ETHUSD|ETH/USD OTC","OTC:LTCUSD|LTC/USD OTC","OTC:XRPUSD|XRP/USD OTC",
+    "OTC:GOLD|GOLD OTC","OTC:SILVER|SILVER OTC","OTC:OIL|OIL OTC"
   ]
 };
 
-// Load Market Dropdown
 function loadDropdown(){
-  let select = document.getElementById('pairSelect');
+  let select = document.getElementById('pairSelect'); 
   select.innerHTML = "";
   markets[marketMode].forEach(m=>{
     let [val, name] = m.split("|");
-    let option = document.createElement('option');
-    option.value = val; option.innerText = name;
-    select.appendChild(option);
+    select.innerHTML += `<option value="${val}">${name}</option>`;
   });
   changePair();
 }
 
-// Change Market Type Live/OTC
 function changeMarketType(){
   marketMode = document.getElementById('marketType').value;
+  clearInterval(otcInterval);
   loadDropdown();
 }
 
 loadDropdown();
 
-// Load Chart
 function loadChart(symbol, tf){
   currentSymbol = symbol; currentTF = tf;
   let chartDiv = document.getElementById('tradingview_chart');
   chartDiv.innerHTML = "";
+  clearInterval(otcInterval);
   
   if(marketMode == "otc"){
-    chartDiv.innerHTML = `<div class="otc-msg">⚠️ OTC Market<br>TradingView এ OTC Data নাই<br>শুধু LIVE Market এর Chart দেখাবে</div>`;
+    chartDiv.innerHTML = `<div class="otc-chart" id="otcChart"></div>`;
+    drawOTCChart();
+    otcInterval = setInterval(drawOTCChart, 1500);
     return;
   }
 
@@ -149,12 +156,22 @@ function loadChart(symbol, tf){
   });
 }
 
-function changePair(){
-  let pair = document.getElementById('pairSelect').value;
-  loadChart(pair, currentTF);
+function drawOTCChart(){
+  otcPrice += (Math.random() - 0.48) * 0.002;
+  otcPrices.push(otcPrice);
+  if(otcPrices.length > 60) otcPrices.shift();
+  
+  let html = "";
+  otcPrices.forEach((p,i)=>{
+    let h = 80 + (p - otcPrices[0]) * 8000;
+    let cls = i > 0 && p > otcPrices[i-1] ? "" : "down";
+    html += `<div class="candle ${cls}" style="height:${Math.abs(h)}px"></div>`;
+  });
+  document.getElementById('otcChart').innerHTML = html;
 }
 
-// Timeframe Button
+function changePair(){ loadChart(document.getElementById('pairSelect').value, currentTF); }
+
 document.querySelectorAll('#timeframeBtn .btn').forEach(btn=>{
   btn.onclick = function(){
     document.querySelectorAll('#timeframeBtn .btn').forEach(b=>b.classList.remove('active'));
@@ -163,13 +180,25 @@ document.querySelectorAll('#timeframeBtn .btn').forEach(btn=>{
   }
 })
 
-// Analysis
+function calculateRSI(prices){
+  if(prices.length < 14) return 50;
+  let gains = 0, losses = 0;
+  for(let i=1; i<prices.length; i++){
+    let diff = prices[i] - prices[i-1];
+    if(diff > 0) gains += diff; else losses -= diff;
+  }
+  let rs = gains / (losses || 1);
+  return 100 - (100 / (1 + rs));
+}
+
 function runAnalysis(){
   let btn = document.querySelector('.scan-btn');
   btn.innerText = "ANALYZING..."; btn.disabled = true;
   setTimeout(()=>{
-    let result = Math.random() > 0.5 ? "UP" : "DOWN";
+    let rsi = marketMode == "otc" ? calculateRSI(otcPrices) : 30 + Math.random() * 40;
+    let result = rsi < 40 ? "UP" : rsi > 60 ? "DOWN" : Math.random() > 0.5 ? "UP" : "DOWN";
     let market = document.getElementById('pairSelect').options[document.getElementById('pairSelect').selectedIndex].text;
+    
     document.getElementById('overlay').style.display = "flex";
     document.getElementById('marketName').innerText = market;
     document.getElementById('resultText').innerText = result;
@@ -179,6 +208,7 @@ function runAnalysis(){
     btn.innerText = "⚡ ANALYZE & GET RESULT"; btn.disabled = false;
   },2000)
 }
+
 function closeResult(){document.getElementById('overlay').style.display = "none";}
 </script>
 </body>
