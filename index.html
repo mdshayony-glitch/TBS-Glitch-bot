@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>TBS SIGNAL</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#06090f">
+<!-- TradingView Chart Script -->
+<script type="text/javascript" src="https://s3.tradingview.com/tv.js"></script>
+<style>
+  *{margin:0; padding:0; box-sizing:border-box;}
+  body{background:#06090f; color:#e0e0e0; font-family:'Segoe UI',sans-serif; padding:12px;}
+  .card{background:#0f172a; border:1px solid #1e293b; border-radius:16px; padding:14px; margin-bottom:12px;}
+  .header{display:flex; align-items:center; justify-content:space-between;}
+  .logo-icon{width:45px; height:45px; background:linear-gradient(135deg,#00ffb8,#00a3ff); border-radius:12px; display:flex; align-items:center; justify-content:center; font-size:22px;}
+  .badge{background:#00e676; color:#000; padding:3px 8px; border-radius:6px; font-size:10px; font-weight:bold;}
+  .online{color:#00e676; display:flex; align-items:center; gap:5px; font-size:12px;}
+  .dot{width:8px; height:8px; background:#00e676; border-radius:50%; animation:pulse 1.5s infinite;}
+  @keyframes pulse{0%{box-shadow:0 0 0 0 rgba(0,230,118,0.7)} 100%{box-shadow:0 0 0 10px rgba(0,230,118,0)}}
+  .btn-group{display:flex; gap:8px; flex-wrap:wrap; margin-top:10px;}
+  .btn{background:#1e293b; color:#cbd5e1; border:none; padding:8px 14px; border-radius:10px; cursor:pointer; font-size:13px;}
+  .btn.active{background:linear-gradient(90deg,#00e676,#00b0ff); color:#000; font-weight:bold;}
+  select{width:100%; background:#1e293b; color:#fff; border:1px solid #334155; padding:10px; border-radius:10px; margin-top:10px; outline:none;}
+  #tradingview_chart{height:230px; border-radius:12px; margin-top:10px; overflow:hidden;}
+  .scan-btn{width:100%; background:linear-gradient(90deg,#00e676,#00a3ff); border:none; color:#000; padding:14px; font-weight:bold; font-size:15px; border-radius:12px; margin-top:15px; cursor:pointer;}
+  .signal-box{text-align:center; padding:12px; margin-top:10px; border-radius:10px; display:none; font-weight:bold; font-size:18px;}
+  .call{background:#00e676; color:#000;}
+  .put{background:#ff5252; color:#fff;}
+</style>
+</head>
+<body>
+
+<div class="card">
+  <div class="header">
+    <div style="display:flex; align-items:center; gap:10px;">
+      <div class="logo-icon">🛡️</div>
+      <div><div style="font-weight:bold; font-size:16px;">TBS SIGNAL <span class="badge">PRO</span></div><div style="font-size:11px; color:#94a3b8;">Encrypted Terminal</div></div>
+    </div>
+    <div class="online"><div class="dot"></div> ONLINE</div>
+  </div>
+</div>
+
+<div class="card">
+  <div style="font-size:12px; color:#94a3b8;">🎯 TARGET BROKER NODE</div>
+  <div class="btn-group">
+    <button class="btn active">Quotex</button><button class="btn">Pocket</button><button class="btn">Binomo</button><button class="btn">Olymp</button>
+  </div>
+</div>
+
+<div class="card">
+  <div style="font-size:12px; color:#94a3b8;">🔍 ASSET & PAIR</div>
+  <select id="pairSelect" onchange="changePair()">
+    <option value="OANDA:EURUSD">EUR/USD</option>
+    <option value="OANDA:GBPUSD">GBP/USD</option>
+    <option value="BINANCE:BTCUSDT">BTC/USD</option>
+    <option value="OANDA:USDJPY">USD/JPY</option>
+  </select>
+</div>
+
+<div class="card">
+  <div style="font-size:12px; color:#94a3b8;">⏰ TIMEFRAME</div>
+  <div class="btn-group">
+    <button class="btn">5s</button><button class="btn">15s</button><button class="btn">30s</button><button class="btn active">1m</button><button class="btn">5m</button>
+  </div>
+</div>
+
+<div class="card">
+  <div style="font-size:12px; color:#94a3b8; margin-bottom:8px;">📈 LIVE TRADINGVIEW CHART</div>
+  <div id="tradingview_chart"></div>
+</div>
+
+<div id="signalBox" class="signal-box">SIGNAL: <span id="signalText">CALL</span></div>
+<button class="scan-btn" onclick="runScan()">⚡ EXECUTE AI SIGNAL SCAN</button>
+
+<script>
+// 1. TradingView Chart Load
+let tvWidget;
+function loadChart(symbol){
+  document.getElementById('tradingview_chart').innerHTML = "";
+  tvWidget = new TradingView.widget({
+    "autosize": true,
+    "height": 230,
+    "symbol": symbol,
+    "interval": "1",
+    "timezone": "Asia/Dhaka",
+    "theme": "dark",
+    "style": "1",
+    "locale": "en",
+    "toolbar_bg": "#0f172a",
+    "enable_publishing": false,
+    "allow_symbol_change": false,
+    "container_id": "tradingview_chart"
+  });
+}
+loadChart("OANDA:EURUSD"); // Default Chart
+
+// 2. Pair Change Function
+function changePair(){
+  let pair = document.getElementById('pairSelect').value;
+  loadChart(pair);
+}
+
+// 3. Signal Scan Button
+function runScan(){
+  document.querySelector('.scan-btn').innerText = "SCANNING...";
+  setTimeout(()=>{
+    let signal = Math.random() > 0.5 ? "CALL" : "PUT";
+    let box = document.getElementById('signalBox');
+    document.getElementById('signalText').innerText = signal;
+    box.className = "signal-box " + (signal=="CALL"?"call":"put");
+    box.style.display = "block";
+    document.querySelector('.scan-btn').innerText = "⚡ EXECUTE AI SIGNAL SCAN";
+    alert("Demo Signal: " + signal + "\n\nএটা শুধু Practice এর জন্য। Real Trade এ রিস্ক নিয়ে ইউজ করো না");
+  },2000)
+}
+</script>
+</body>
+  </html>
